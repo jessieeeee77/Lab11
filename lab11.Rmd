@@ -16,10 +16,161 @@ library(openintro)
 #git config -- user.email "huz220@wfu.edu"
 ```
 
-### Exercise 1
+
+```{r data}
+data(ncbirths)
+glimpse(ncbirths)
+#100 cases, 13 variables
+ggplot(ncbirths, aes(x=weight)) + 
+  geom_bar()
+#does have outilers that are extreme.
+```
+```{r 2}
+ncbirths_white <- ncbirths %>%
+  filter(whitemom %in% c("white"))
+
+mean(ncbirths$weight)
+#7.101
+```
+```{r 3}
+ncbirths_white %>%
+  count(weight)
+#looked at the data, it seems that the conditions necessary for simulating based on inference are satisfied.
+```
+```{r 4}
+boot <- ncbirths_white %>%
+  slice_sample(n = 50, replace = TRUE)
+mean(boot$weight)
+sd(boot$weight)
+# set a seed
+set.seed(1234)
+# take 1000 bootstrap samples
+a = replicate(1000, mean(sample(boot$weight, 50, replace=TRUE)))
+mean(a)
+sd(a)
+hist(a)
+
+```
+```{r test}
+ncbirths_white %>%
+  specify(response = weight) %>% 
+  generate(reps = 15000, type = "bootstrap") %>% 
+  calculate(stat = "mean") %>%
+  summarize(lower = quantile(stat, 0.025),
+            upper = quantile(stat, 0.975))
+boot2 <- ncbirths_white %>%
+  # specify the variable of interest
+  specify(response = weight) %>% 
+  # generate 15000 bootstrap samples
+  generate(reps = 15000, type = "bootstrap") %>% 
+  # calculate the mean of each bootstrap sample
+  calculate(stat = "mean")
+ggplot(data = boot2, mapping = aes(x = stat)) +
+  geom_histogram(binwidth = .01) +
+  labs(title = "Bootstrap distribution of means")
+quantile(boot$stat, c(0.025, 0.975))
+mean(boot2$stat > 7.43)
+#significant
+```
+```{r 5}
+ggplot(data = ncbirths_white, mapping = aes(x = habit, y=weight)) +
+  geom_boxplot() +
+  labs(title = "smoking and weight")
+```
+
+```{r 6}
+na.omit(ncbirths_white$habit)
+ncbirths_habitgiven <- ncbirths_white
+```
+
+```{r 7}
+ncbirths_habitgiven %>%
+  group_by(habit) %>%
+  summarise(mean_weight = mean(weight))
+#H0: μ weight(smoker)=μ weight(nonsmoker)
+#H1: μ weigth(smoker)≠ μ weight(nonsmoker)
+```
+```{r 8}
+#satisfied. Because bootstrapping can be used to simulate and the conditions are satisfied.
+```
+```{r 9 }
+mean(ncbirths_habitgiven$weight[ncbirths_habitgiven$habit=="smoker"])
+mean(ncbirths_habitgiven$weight[ncbirths_habitgiven$habit=="nonsmoker"])
+with(ncbirths_habitgiven, tapply(weight, habit, mean))
+test.stat1 <-abs(mean(ncbirths_habitgiven$weight[ncbirths_habitgiven$habit=="smoker"])-mean(ncbirths_habitgiven$weight[ncbirths_habitgiven$habit=="nonsmoker"]))
+test.stat1
+set.seed(1234)
+n<-length(ncbirths_habitgiven$weight)
+n
+B <-1000
+variable <-ncbirths_habitgiven$weight
+```
+
+```{r}
+ncbirths_habitgiven %>%
+  group_by(habit) %>%
+  summarise(mean_weight = mean(weight))
+stat.test <- ncbirths_habitgiven %>% 
+  t_test(weight ~ habit) 
+stat.test
+#significantly different
+```
+
+```{r 9 function}
+quantile(ncbirths_habitgiven$weight,c(0.025,0.975))
+meanDiff =function(ncbirths_habitgiven, weight){
+    y <- tapply(ncbirths_habitgiven$weight[ncbirths_habitgiven$habit=="smoker"],
+                ncbirths_habitgiven$weight[ncbirths_habitgiven$habit=="nonsmoker"], mean)
+    y[1]-y[2]}
+
+```
+```{r 9 10}
+with(ncbirths_habitgiven, tapply(weight, habit, mean))
+diff(with(ncbirths_habitgiven,tapply(weight, habit, mean)))
+set.seed(1234)
+n.s <- 20
+n.n <- 20
+B <- 10000
+Boot.smkoer <- matrix(sample(ncbirths_habitgiven$weight[ncbirths_habitgiven$habit=="smoker"], size=B * n.s, replace = TRUE), ncol=B, nrow=n.s)
+Boot.nonsmkoer <- matrix(sample(ncbirths_habitgiven$weight[ncbirths_habitgiven$habit=="nonsmoker"],size=B * n.n, replace = TRUE), ncol=B, nrow=n.s)
+dim(Boot.nonsmkoer)
+dim(Boot.nonsmkoer)
+Boot.smkoer[1:5, 1:5]
+Boot.nonsmkoer[1:5, 1:5]
+
+Boot.diff.in.means <-colMeans(Boot.smkoer) - colMeans(Boot.nonsmkoer)
+length(Boot.diff.in.means)
+quantile(Boot.diff.in.means, probs = 0.025, na.rm = TRUE)
+quantile(Boot.diff.in.means, probs = 0.975, na.rm = TRUE)
+
+#95% confident that the diff of baby weight between smoker and nonsmoker is between -1.412838 to .3735
+#intervals contain 0, not statistically significant.
+```
+```{r 11}
+ncbirths_mature <- ncbirths %>%
+  filter(mature %in% c("younger mom")) 
+range(ncbirths_mature$mage, na.rm = FALSE)
+#the cutoff is 34. I split the file and then checked the age range of the younger mothers.
+
+```
+```{r 12}
+
+```
+
+```{r 13}
+
+```
 
 
-### Exercise 2
+
+
+
+
+
+
+
+
+
 
 ...
 

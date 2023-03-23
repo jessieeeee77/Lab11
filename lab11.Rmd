@@ -106,7 +106,7 @@ B <-1000
 variable <-ncbirths_habitgiven$weight
 ```
 
-```{r}
+```{r 9.}
 ncbirths_habitgiven %>%
   group_by(habit) %>%
   summarise(mean_weight = mean(weight))
@@ -154,11 +154,36 @@ range(ncbirths_mature$mage, na.rm = FALSE)
 
 ```
 ```{r 12}
-
+ncbirths %>%
+  group_by(mature) %>%
+  summarise(mean_weight = mean(weight))
+#H0: μ weight(mature)=μ weight(younger)
+#H1: μ weigth(mature)> μ weight(younger)
+stat.test <- ncbirths %>% 
+  t_test(weight ~ mature) 
+stat.test
+#p-value=0.8527932, not significant.
 ```
 
 ```{r 13}
+with(ncbirths, tapply(weight, mature, mean))
+diff(with(ncbirths,tapply(weight, mature, mean)))
+set.seed(1234)
+n.y <- 20
+n.m <- 20
+B <- 10000
+Boot.younger <- matrix(sample(ncbirths$weight[ncbirths$mature=="younger mom"], size=B * n.y, replace = TRUE), ncol=B, nrow=n.y)
+Boot.mature <- matrix(sample(ncbirths$weight[ncbirths$mature=="mature mom"],size=B * n.m, replace = TRUE), ncol=B, nrow=n.m)
+dim(Boot.younger)
+dim(Boot.mature)
+Boot.younger[1:5, 1:5]
+Boot.mature [1:5, 1:5]
 
+Boot.diff <-colMeans(Boot.mature) - colMeans(Boot.younger)
+length(Boot.diff)
+quantile(Boot.diff, probs = 0.05, na.rm = TRUE)
+quantile(Boot.diff, probs = 0.95, na.rm = TRUE)
+#include zero, not significantly different in means of weight.
 ```
 
 

@@ -90,13 +90,13 @@ boot <- ncbirths_white %>%
 mean(boot$weight)
 ```
 
-    ## [1] 7.3266
+    ## [1] 7.2438
 
 ``` r
 sd(boot$weight)
 ```
 
-    ## [1] 1.670797
+    ## [1] 1.910825
 
 ``` r
 # set a seed
@@ -106,13 +106,13 @@ a = replicate(1000, mean(sample(boot$weight, 50, replace=TRUE)))
 mean(a)
 ```
 
-    ## [1] 7.326707
+    ## [1] 7.251692
 
 ``` r
 sd(a)
 ```
 
-    ## [1] 0.2387144
+    ## [1] 0.260486
 
 ``` r
 hist(a)
@@ -494,6 +494,123 @@ range(ncbirths_mature$mage, na.rm = FALSE)
 
 ``` r
 #the cutoff is 34. I split the file and then checked the age range of the younger mothers.
+```
+
+``` r
+ncbirths %>%
+  group_by(mature) %>%
+  summarise(mean_weight = mean(weight))
+```
+
+    ## # A tibble: 2 × 2
+    ##   mature      mean_weight
+    ##   <fct>             <dbl>
+    ## 1 mature mom         7.13
+    ## 2 younger mom        7.10
+
+``` r
+#H0: μ weight(mature)=μ weight(younger)
+#H1: μ weigth(mature)> μ weight(younger)
+stat.test <- ncbirths %>% 
+  t_test(weight ~ mature) 
+```
+
+    ## Warning: The statistic is based on a difference or ratio; by default, for
+    ## difference-based statistics, the explanatory variable is subtracted in the
+    ## order "mature mom" - "younger mom", or divided in the order "mature mom" /
+    ## "younger mom" for ratio-based statistics. To specify this order yourself,
+    ## supply `order = c("mature mom", "younger mom")`.
+
+``` r
+stat.test
+```
+
+    ## # A tibble: 1 × 7
+    ##   statistic  t_df p_value alternative estimate lower_ci upper_ci
+    ##       <dbl> <dbl>   <dbl> <chr>          <dbl>    <dbl>    <dbl>
+    ## 1     0.186  166.   0.853 two.sided     0.0283   -0.273    0.329
+
+``` r
+#p-value=0.8527932, not significant.
+```
+
+``` r
+with(ncbirths, tapply(weight, mature, mean))
+```
+
+    ##  mature mom younger mom 
+    ##    7.125564    7.097232
+
+``` r
+diff(with(ncbirths,tapply(weight, mature, mean)))
+```
+
+    ## younger mom 
+    ## -0.02833208
+
+``` r
+set.seed(1234)
+n.y <- 20
+n.m <- 20
+B <- 10000
+Boot.younger <- matrix(sample(ncbirths$weight[ncbirths$mature=="younger mom"], size=B * n.y, replace = TRUE), ncol=B, nrow=n.y)
+Boot.mature <- matrix(sample(ncbirths$weight[ncbirths$mature=="mature mom"],size=B * n.m, replace = TRUE), ncol=B, nrow=n.m)
+dim(Boot.younger)
+```
+
+    ## [1]    20 10000
+
+``` r
+dim(Boot.mature)
+```
+
+    ## [1]    20 10000
+
+``` r
+Boot.younger[1:5, 1:5]
+```
+
+    ##      [,1] [,2] [,3] [,4] [,5]
+    ## [1,] 3.75 7.63 8.56 4.00 6.25
+    ## [2,] 6.94 6.31 5.44 7.56 7.81
+    ## [3,] 7.94 7.50 5.94 7.50 4.50
+    ## [4,] 6.50 6.81 7.56 6.69 6.19
+    ## [5,] 6.00 6.63 7.31 6.75 6.38
+
+``` r
+Boot.mature [1:5, 1:5]
+```
+
+    ##      [,1]  [,2] [,3] [,4] [,5]
+    ## [1,] 7.06 10.13 8.44 6.38 8.50
+    ## [2,] 9.88  7.69 6.63 7.06 7.50
+    ## [3,] 7.19  6.25 8.44 8.75 7.06
+    ## [4,] 8.25  5.69 8.13 7.69 7.56
+    ## [5,] 5.13  7.56 5.94 5.50 7.00
+
+``` r
+Boot.diff <-colMeans(Boot.mature) - colMeans(Boot.younger)
+length(Boot.diff)
+```
+
+    ## [1] 10000
+
+``` r
+quantile(Boot.diff, probs = 0.05, na.rm = TRUE)
+```
+
+    ##     5% 
+    ## -0.787
+
+``` r
+quantile(Boot.diff, probs = 0.95, na.rm = TRUE)
+```
+
+    ##   95% 
+    ## 0.843
+
+``` r
+#include zero, not significantly different in means of weight.
 ```
 
 …
